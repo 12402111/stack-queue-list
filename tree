@@ -1,0 +1,406 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+class Node
+{
+public:
+    int data;
+    Node *left;
+    Node *right;
+    Node *parent; //
+
+    Node(int val = 0)
+    {
+        data = val;
+        left = right = parent = nullptr;
+    }
+};
+
+// ---------- INSERT (BST) ----------
+Node *insert(Node *root, int val)
+{
+    if (!root)
+        return new Node(val);
+
+    if (val < root->data)
+        root->left = insert(root->left, val);
+    else if (val > root->data)
+        root->right = insert(root->right, val);
+
+    return root;
+}
+
+Node *bst(vector<int> &v)
+{
+    Node *root = nullptr;
+    for (int x : v)
+        root = insert(root, x);
+    return root;
+}
+
+// ---------- INORDER ----------
+void inorder(Node *root)
+{
+    if (!root)
+        return;
+    inorder(root->left);
+    cout << root->data << " ";
+    inorder(root->right);
+}
+
+void level_order(Node *root)
+{
+    queue<Node *> st;
+
+    if (root)
+        st.push(root);
+    while (!st.empty())
+    {
+        cout << st.front()->data << " ";
+        if (st.front()->left)
+            st.push(st.front()->left);
+        if (st.front()->right)
+            st.push(st.front()->right);
+        st.pop();
+    };
+}
+int height(Node *root)
+{
+    if (!root)
+        return 0;
+    return 1 + max(height(root->left), height(root->right));
+}
+int height_bfs(Node *root)
+{
+    int h = 0;
+    queue<Node *> st;
+
+    if (root)
+        st.push(root);
+
+    while (!st.empty())
+    {
+        int s = st.size();
+
+        h++;
+        while (s--)
+        {
+
+            if (st.front()->left)
+                st.push(st.front()->left);
+            if (st.front()->right)
+                st.push(st.front()->right);
+            st.pop();
+        }
+    }
+    return h;
+}
+void zigzag(Node *root)
+{
+    stack<Node *> curr;
+    stack<Node *> next;
+    bool lr = true;
+    if (!root)
+        return;
+    curr.push(root);
+    while (!curr.empty())
+    {
+        Node *temp = curr.top();
+        curr.pop();
+        if (temp)
+        {
+            cout << temp->data << " ";
+            if (lr)
+            {
+                if (temp->left)
+                    next.push(temp->left);
+                if (temp->right)
+                    next.push(temp->right);
+            }
+            else
+            {
+                if (temp->right)
+                    next.push(temp->right);
+                if (temp->left)
+                    next.push(temp->left);
+            }
+        }
+        if (curr.empty())
+        {
+            swap(curr, next);
+            lr = !lr;
+        }
+    }
+}
+
+//-------------width---------
+int width(Node *root)
+{
+    queue<pair<Node *, int>> q;
+    if (root)
+        q.push({root, 0});
+    int dia = 0;
+    while (!q.empty())
+    {
+        int t = q.size();
+        dia = max(dia, q.back().second - q.front().second + 1);
+        while (t--)
+        {
+            Node* tem=q.front().first;
+            int i=q.front().second;
+            if(tem->left)q.push({tem->left,i*2+1});
+            if(tem->right)q.push({tem->right,i*2+2});
+            q.pop();
+
+        }
+    }
+    return dia;
+}
+
+// ---------- SEARCH ----------
+Node *search(Node *root, int val)
+{
+    if (!root)
+        return nullptr;
+
+    if (val < root->data)
+        return search(root->left, val);
+    else if (val > root->data)
+        return search(root->right, val);
+    else
+        return root;
+}
+
+// ---------- DELETE LEAF ----------
+void delete_leaf(Node *&root, int val)
+{
+    if (!root)
+    {
+        cout << "nothing be deleted\n";
+        return;
+    }
+
+    if (root->data == val)
+    {
+        // Must be leaf
+        if (!root->left && !root->right)
+        {
+            delete root;    // free memory
+            root = nullptr; // disconnect from parent
+            cout << "Successfully deleted: " << val << endl;
+        }
+        else
+            cout << "Node is not a leaf\n";
+        return;
+    }
+
+    // BST traversal
+    if (val < root->data)
+        delete_leaf(root->left, val);
+    else
+        delete_leaf(root->right, val);
+}
+
+// ---------- DELETE SINGLE CHILD ----------
+void delete_with_single_child(Node *&root, int val)
+{
+    if (!root)
+    {
+        cout << "nothing be deleted\n";
+        return;
+    }
+
+    if (root->data == val)
+    {
+        // Exactly one child required
+        if ((root->left && !root->right) || (!root->left && root->right))
+        {
+            Node *temp = root;
+
+            // Promote the only child
+            root = (root->left) ? root->left : root->right;
+
+            delete temp;
+            cout << "Successfully deleted: " << val << endl;
+        }
+        else
+            cout << "Node does not have exactly one child\n";
+        return;
+    }
+
+    // BST traversal
+    if (val < root->data)
+        delete_with_single_child(root->left, val);
+    else
+        delete_with_single_child(root->right, val);
+}
+
+// ---------- SUCCESSOR (YOUR IDEA, SAFELY FIXED) ----------
+Node *successor(Node *root, int value)
+{
+    if (!root)
+        return nullptr;
+
+    Node *tg = nullptr;  // target node
+    Node *cur = nullptr; // will hold successor ancestor
+    Node *temp = root;   // traversal pointer (temporary)
+
+    while (temp)
+    {
+        if (value < temp->data)
+        {
+            cur = temp; // possible successor
+            temp = temp->left;
+        }
+        else if (value > temp->data)
+        {
+            temp = temp->right; // DO NOT touch cur here
+        }
+        else
+        {
+            tg = temp;
+            break;
+        }
+    }
+
+    if (!tg)
+        return nullptr;
+
+    // Case 1: right subtree exists
+    if (tg->right)
+    {
+        tg = tg->right;
+        while (tg->left)
+            tg = tg->left;
+        return tg;
+    }
+
+    // Case 2: no right subtree
+    return cur;
+}
+
+// ---------- DELETE (3 SCENARIOS) ----------
+int deletion(Node *root, int val)
+{
+    Node *tg = search(root, val);
+    if (!tg)
+    {
+        cout << "Value not found\n";
+        return -1;
+    }
+
+    int replacedValue = 0;
+
+    // Case 3: Two children
+    if (tg->left && tg->right)
+    {
+        Node *suc = successor(root, val);
+        replacedValue = suc->data;
+
+        // Delete successor
+        if (suc->left || suc->right)
+            delete_with_single_child(root, replacedValue);
+        else
+            delete_leaf(root, replacedValue);
+
+        // Replace data
+        tg->data = replacedValue;
+    }
+    // Case 2: Single child
+    else if (tg->left || tg->right)
+    {
+        delete_with_single_child(root, val);
+    }
+    // Case 1: Leaf
+    else
+    {
+        delete_leaf(root, val);
+    }
+
+    return replacedValue;
+}
+
+// shraddha khapra mam deltion:
+Node *delnode(Node *root, int key)
+{
+
+    if (root == nullptr)
+        return nullptr;
+
+    if (key < root->data)
+        root->left = delnode(root->left, key);
+    else if (key > root->data)
+        root->right = delnode(root->right, key);
+
+    else
+    {
+        if (!root->left)
+        {
+            Node *temp = root->right;
+            delete root;
+            return temp;
+        }
+        else if (!root->right)
+        {
+            Node *temp = root->left;
+            delete root;
+            return temp;
+        }
+        else
+        {
+            Node *suc = successor(root, key);
+            root->data = suc->data;
+            root->right = delnode(root->right, suc->data);
+        }
+    }
+    return root;
+}
+
+// ---------- MAIN ----------
+int main()
+{
+    vector<int> vc = {
+        5, 10, 3, 1, -1, -5, 2, 4, 7, 20, 9, 11, 13};
+
+    Node *root = bst(vc);
+
+    cout << "Initial inorder:\n";
+    inorder(root);
+    cout << "\n\n";
+    // level_order(root);
+    zigzag(root);
+    cout << endl;
+    cout << height(root) << endl;
+
+    (height(root) == height_bfs(root)) ? cout << "ok" : cout << "fishy";
+    cout << endl;
+
+    // // Leaf deletions
+    // delete_leaf(root, 95);
+    // delete_leaf(root, 5);
+
+    // // Two-child deletion
+    // deletion(root,40);
+
+    // cout << "\nAfter deletions inorder:\n";
+    // inorder(root);
+    // cout << "\n\n";
+
+    // // Successor test
+    // int nn;
+    // cout << "Enter value to find successor: ";
+    // cin >> nn;
+
+    // Node *s = successor(root, nn);
+    // if (s)
+    //     cout << "Successor: " << s->data << endl;
+    // else
+    //     cout << "No successor exists\n";
+    //     delnode(root,65);
+
+    // cout<< "\nFinal inorder:\n";
+    // inorder(root);
+
+    // cout << "\nEnd of program\n";
+    return 0;
+}
