@@ -64,11 +64,22 @@ void level_order(Node *root)
         st.pop();
     };
 }
+int c=0;
 int height(Node *root)
 {
     if (!root)
         return 0;
-    return 1 + max(height(root->left), height(root->right));
+        int l=height(root->left);
+        int r=height(root->right);
+        c=max(c,l+r);
+    return 1 + max(l,r);
+}
+//time complexity will higher
+
+
+// Wrapper to match your function signature
+int diameter2(Node* root) {
+    return c;
 }
 int height_bfs(Node *root)
 {
@@ -139,11 +150,11 @@ int width(Node *root)
     queue<pair<Node *, int>> q;
     if (root)
         q.push({root, 0});
-    int dia = 0;
+    int wid = 0;
     while (!q.empty())
     {
         int t = q.size();
-        dia = max(dia, q.back().second - q.front().second + 1);
+        wid = max(wid, q.back().second - q.front().second + 1);
         while (t--)
         {
             Node* tem=q.front().first;
@@ -154,7 +165,7 @@ int width(Node *root)
 
         }
     }
-    return dia;
+    return wid;
 }
 
 // ---------- SEARCH ----------
