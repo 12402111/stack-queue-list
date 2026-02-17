@@ -1,0 +1,41 @@
+#include <bits/stdc++.h>
+using namespace std;
+int vertices = 0;
+vector<vector<int>> v;
+void add_edge(int i, int j)
+{
+    v[i].push_back(j);
+    v[j].push_back(i);
+}
+
+bool dfs(int s,int vis[],int par[])
+{vis[s]=1;
+    for(int x:v[s] )
+    {
+        if(!vis[x])
+        {par[x]=s;
+            dfs(x,vis,par);
+        }
+        else{
+            if(x!=par[s])return true;
+        }
+    }
+    return false;
+}
+int main()
+{
+    cin >> vertices;
+    v.resize(vertices);
+    int m;
+    cin>>m;
+    while(m--)
+    {
+        int x,y; cin>>x>>y;
+        add_edge(x,y);
+    }
+    int vis[vertices]={0};int par[]={0};
+    bool chk=dfs(1,vis,par);
+    if(chk)cout<<"YES cycle";
+    else cout<<"NO cycle";
+
+}
